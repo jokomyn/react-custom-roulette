@@ -49,6 +49,8 @@ const drawRadialBorder = (
   ctx.stroke();
 };
 
+// ... (keep all the imports and interfaces the same)
+
 const drawWheel = (
   canvasRef: RefObject<HTMLCanvasElement>,
   data: WheelData[],
@@ -174,37 +176,47 @@ const drawWheel = (
       let contentRotationAngle = startAngle + arc / 2;
 
       if (data[i].image) {
-        // CASE: RENDER TEXT + IMAGE SIDE BY SIDE
+        // CASE: RENDER BOTH IMAGE AND TEXT
         contentRotationAngle += 
           data[i].image && !data[i].image?.landscape ? Math.PI / 2 : 0;
         ctx.rotate(contentRotationAngle);
 
-        // 1. Render Text (Left Side)
+        // 1. Render Image (Left Side)
+        const img = data[i].image?._imageHTML || new Image();
+        const imgWidth = img.width * (data[i].image?.sizeMultiplier || 0.2);
+        const imgHeight = img.height * (data[i].image?.sizeMultiplier || 0.2);
+        
+        // Load image if not already loaded
+        if (data[i].image?.uri && !img.src) {
+          img.src = data[i].image?.uri || '';
+        }
+
+        // Draw image
+        ctx.drawImage(
+          img,
+          -imgWidth - 10, // Position left of center
+          -imgHeight / 2, // Center vertically
+          imgWidth,
+          imgHeight
+        );
+
+        // 2. Render Text (Right Side)
         const text = data[i].option;
         ctx.font = `${style?.fontStyle || fontStyle} ${
           style?.fontWeight || fontWeight
-        } ${(style?.fontSize || fontSize) * 1.5}px ${
+        } ${(style?.fontSize || fontSize) * 1.2}px ${
           style?.fontFamily || fontFamily
         }, Helvetica, Arial`;
         ctx.fillStyle = (style && style.textColor) || '#000000';
-
-        const textWidth = ctx.measureText(text || '').width;
-        const textX = -textWidth - 10; // -10 untuk jarak antara teks dan gambar
-        ctx.fillText(text || '', textX, fontSize / 2.7);
-
-        // 2. Render Image (Right Side)
-        const img = data[i].image?._imageHTML || new Image();
-        const imgX = 10; // Jarak dari teks
-        const imgY = -img.height / 2; // Posisi vertikal tengah
-        ctx.drawImage(
-          img,
-          imgX,
-          imgY,
-          img.width,
-          img.height
+        
+        ctx.fillText(
+          text || '',
+          10, // Position right of center
+          fontSize / 2.7 // Center vertically
         );
+
       } else {
-        // CASE TEXT
+        // CASE TEXT ONLY
         contentRotationAngle += perpendicularText ? Math.PI / 2 : 0;
         ctx.rotate(contentRotationAngle);
 
@@ -223,7 +235,6 @@ const drawWheel = (
       }
 
       ctx.restore();
-
       startAngle = endAngle;
     }
   }

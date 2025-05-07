@@ -174,20 +174,32 @@ const drawWheel = (
       let contentRotationAngle = startAngle + arc / 2;
 
       if (data[i].image) {
-        // CASE IMAGE
-        contentRotationAngle +=
+        // CASE: RENDER TEXT + IMAGE SIDE BY SIDE
+        contentRotationAngle += 
           data[i].image && !data[i].image?.landscape ? Math.PI / 2 : 0;
         ctx.rotate(contentRotationAngle);
 
+        // 1. Render Text (Left Side)
+        const text = data[i].option;
+        ctx.font = `${style?.fontStyle || fontStyle} ${
+          style?.fontWeight || fontWeight
+        } ${(style?.fontSize || fontSize) * 1.5}px ${
+          style?.fontFamily || fontFamily
+        }, Helvetica, Arial`;
+        ctx.fillStyle = (style && style.textColor) || '#000000';
+
+        const textWidth = ctx.measureText(text || '').width;
+        const textX = -textWidth - 10; // -10 untuk jarak antara teks dan gambar
+        ctx.fillText(text || '', textX, fontSize / 2.7);
+
+        // 2. Render Image (Right Side)
         const img = data[i].image?._imageHTML || new Image();
+        const imgX = 10; // Jarak dari teks
+        const imgY = -img.height / 2; // Posisi vertikal tengah
         ctx.drawImage(
           img,
-          (img.width + (data[i].image?.offsetX || 0)) / -2,
-          -(
-            img.height -
-            (data[i].image?.landscape ? 0 : 90) + // offsetY correction for non landscape images
-            (data[i].image?.offsetY || 0)
-          ) / 2,
+          imgX,
+          imgY,
           img.width,
           img.height
         );

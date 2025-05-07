@@ -8,8 +8,9 @@ var drawRadialBorder = function (ctx, centerX, centerY, insideRadius, outsideRad
     ctx.closePath();
     ctx.stroke();
 };
+// ... (keep all the imports and interfaces the same)
 var drawWheel = function (canvasRef, data, drawWheelProps) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     /* eslint-disable prefer-const */
     var outerBorderColor = drawWheelProps.outerBorderColor, outerBorderWidth = drawWheelProps.outerBorderWidth, innerRadius = drawWheelProps.innerRadius, innerBorderColor = drawWheelProps.innerBorderColor, innerBorderWidth = drawWheelProps.innerBorderWidth, radiusLineColor = drawWheelProps.radiusLineColor, radiusLineWidth = drawWheelProps.radiusLineWidth, fontFamily = drawWheelProps.fontFamily, fontWeight = drawWheelProps.fontWeight, fontSize = drawWheelProps.fontSize, fontStyle = drawWheelProps.fontStyle, perpendicularText = drawWheelProps.perpendicularText, prizeMap = drawWheelProps.prizeMap, textDistance = drawWheelProps.textDistance;
     var QUANTITY = getQuantity(prizeMap);
@@ -31,7 +32,7 @@ var drawWheel = function (canvasRef, data, drawWheelProps) {
         var centerX = canvas.width / 2;
         var centerY = canvas.height / 2;
         for (var i = 0; i < data.length; i++) {
-            var _f = data[i], optionSize = _f.optionSize, style = _f.style;
+            var _g = data[i], optionSize = _g.optionSize, style = _g.style;
             var arc = (optionSize && (optionSize * (2 * Math.PI)) / QUANTITY) ||
                 (2 * Math.PI) / QUANTITY;
             var endAngle = startAngle + arc;
@@ -69,17 +70,32 @@ var drawWheel = function (canvasRef, data, drawWheelProps) {
             ctx.translate(centerX + Math.cos(startAngle + arc / 2) * contentRadius, centerY + Math.sin(startAngle + arc / 2) * contentRadius);
             var contentRotationAngle = startAngle + arc / 2;
             if (data[i].image) {
-                // CASE IMAGE
+                // CASE: RENDER BOTH IMAGE AND TEXT
                 contentRotationAngle +=
                     data[i].image && !((_a = data[i].image) === null || _a === void 0 ? void 0 : _a.landscape) ? Math.PI / 2 : 0;
                 ctx.rotate(contentRotationAngle);
+                // 1. Render Image (Left Side)
                 var img = ((_b = data[i].image) === null || _b === void 0 ? void 0 : _b._imageHTML) || new Image();
-                ctx.drawImage(img, (img.width + (((_c = data[i].image) === null || _c === void 0 ? void 0 : _c.offsetX) || 0)) / -2, -(img.height -
-                    (((_d = data[i].image) === null || _d === void 0 ? void 0 : _d.landscape) ? 0 : 90) + // offsetY correction for non landscape images
-                    (((_e = data[i].image) === null || _e === void 0 ? void 0 : _e.offsetY) || 0)) / 2, img.width, img.height);
+                var imgWidth = img.width * (((_c = data[i].image) === null || _c === void 0 ? void 0 : _c.sizeMultiplier) || 0.2);
+                var imgHeight = img.height * (((_d = data[i].image) === null || _d === void 0 ? void 0 : _d.sizeMultiplier) || 0.2);
+                // Load image if not already loaded
+                if (((_e = data[i].image) === null || _e === void 0 ? void 0 : _e.uri) && !img.src) {
+                    img.src = ((_f = data[i].image) === null || _f === void 0 ? void 0 : _f.uri) || '';
+                }
+                // Draw image
+                ctx.drawImage(img, -imgWidth - 10, // Position left of center
+                -imgHeight / 2, // Center vertically
+                imgWidth, imgHeight);
+                // 2. Render Text (Right Side)
+                var text = data[i].option;
+                ctx.font = "".concat((style === null || style === void 0 ? void 0 : style.fontStyle) || fontStyle, " ").concat((style === null || style === void 0 ? void 0 : style.fontWeight) || fontWeight, " ").concat(((style === null || style === void 0 ? void 0 : style.fontSize) || fontSize) * 1.2, "px ").concat((style === null || style === void 0 ? void 0 : style.fontFamily) || fontFamily, ", Helvetica, Arial");
+                ctx.fillStyle = (style && style.textColor) || '#000000';
+                ctx.fillText(text || '', 10, // Position right of center
+                fontSize / 2.7 // Center vertically
+                );
             }
             else {
-                // CASE TEXT
+                // CASE TEXT ONLY
                 contentRotationAngle += perpendicularText ? Math.PI / 2 : 0;
                 ctx.rotate(contentRotationAngle);
                 var text = data[i].option;

@@ -1,5 +1,4 @@
 import React, { createRef, RefObject, useEffect } from 'react';
-
 import { WheelCanvasStyle } from './styles';
 import { WheelData } from '../Wheel/types';
 import { clamp, getQuantity } from '../../utils';
@@ -49,30 +48,28 @@ const drawRadialBorder = (
   ctx.stroke();
 };
 
-// ... (keep all the imports and interfaces the same)
-
 const drawWheel = (
   canvasRef: RefObject<HTMLCanvasElement>,
   data: WheelData[],
   drawWheelProps: DrawWheelProps
 ) => {
-  /* eslint-disable prefer-const */
   let {
-    outerBorderColor,
     outerBorderWidth,
-    innerRadius,
-    innerBorderColor,
-    innerBorderWidth,
-    radiusLineColor,
     radiusLineWidth,
-    fontFamily,
-    fontWeight,
-    fontSize,
-    fontStyle,
-    perpendicularText,
-    prizeMap,
-    textDistance,
+    innerBorderWidth
   } = drawWheelProps;
+
+  const { outerBorderColor, 
+    innerRadius, 
+    innerBorderColor, 
+    radiusLineColor, 
+    fontFamily, 
+    fontWeight, 
+    fontSize, 
+    fontStyle, 
+    perpendicularText, 
+    prizeMap, 
+    textDistance } = drawWheelProps;
 
   const QUANTITY = getQuantity(prizeMap);
 
@@ -107,7 +104,7 @@ const drawWheel = (
         (2 * Math.PI) / QUANTITY;
       const endAngle = startAngle + arc;
 
-      ctx.fillStyle = (style && style.backgroundColor) as string;
+      ctx.fillStyle = ((style && style.backgroundColor) as string) || '#ffffff';
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, outsideRadius, startAngle, endAngle, false);
@@ -116,7 +113,7 @@ const drawWheel = (
       ctx.fill();
       ctx.save();
 
-      // WHEEL RADIUS LINES
+      // Draw radial lines
       ctx.strokeStyle = radiusLineWidth <= 0 ? 'transparent' : radiusLineColor;
       ctx.lineWidth = radiusLineWidth;
       drawRadialBorder(
@@ -138,7 +135,7 @@ const drawWheel = (
         );
       }
 
-      // WHEEL OUTER BORDER
+      // Draw outer border
       ctx.strokeStyle =
         outerBorderWidth <= 0 ? 'transparent' : outerBorderColor;
       ctx.lineWidth = outerBorderWidth;
@@ -153,7 +150,7 @@ const drawWheel = (
       ctx.closePath();
       ctx.stroke();
 
-      // WHEEL INNER BORDER
+      // Draw inner border
       ctx.strokeStyle =
         innerBorderWidth <= 0 ? 'transparent' : innerBorderColor;
       ctx.lineWidth = innerBorderWidth;
@@ -168,69 +165,41 @@ const drawWheel = (
       ctx.closePath();
       ctx.stroke();
 
-      // CONTENT FILL
+      // Draw text + image content
       ctx.translate(
         centerX + Math.cos(startAngle + arc / 2) * contentRadius,
         centerY + Math.sin(startAngle + arc / 2) * contentRadius
       );
+
       let contentRotationAngle = startAngle + arc / 2;
+      if (perpendicularText) {
+        contentRotationAngle += Math.PI / 2;
+      }
+      ctx.rotate(contentRotationAngle);
 
-      if (data[i].image) {
-        // CASE: RENDER BOTH IMAGE AND TEXT
-        contentRotationAngle += 
-          data[i].image && !data[i].image?.landscape ? Math.PI / 2 : 0;
-        ctx.rotate(contentRotationAngle);
+      // Draw text
+      const text = data[i].option;
+      ctx.font = `${style?.fontStyle || fontStyle} ${
+        style?.fontWeight || fontWeight
+      } ${(style?.fontSize || fontSize) * 2}px ${
+        style?.fontFamily || fontFamily
+      }, Helvetica, Arial`;
+      ctx.fillStyle = ((style && style.textColor) as string) || '#000';
+      ctx.textAlign = 'center';
+      ctx.fillText(text || '', 0, -10); // Teks di atas
 
-        // 1. Render Image (Left Side)
-        const img = data[i].image?._imageHTML || new Image();
-        const imgWidth = img.width * (data[i].image?.sizeMultiplier || 0.2);
-        const imgHeight = img.height * (data[i].image?.sizeMultiplier || 0.2);
-        
-        // Load image if not already loaded
-        if (data[i].image?.uri && !img.src) {
-          img.src = data[i].image?.uri || '';
-        }
-
-        // Draw image
+      // Draw image (if any)
+      if (
+        data[i].image &&
+        data[i]?.image?._imageHTML instanceof HTMLImageElement
+      ) {
+        const img = data[i]?.image?._imageHTML || new Image();
         ctx.drawImage(
           img,
-          -imgWidth - 10, // Position left of center
-          -imgHeight / 2, // Center vertically
-          imgWidth,
-          imgHeight
-        );
-
-        // 2. Render Text (Right Side)
-        const text = data[i].option;
-        ctx.font = `${style?.fontStyle || fontStyle} ${
-          style?.fontWeight || fontWeight
-        } ${(style?.fontSize || fontSize) * 1.2}px ${
-          style?.fontFamily || fontFamily
-        }, Helvetica, Arial`;
-        ctx.fillStyle = (style && style.textColor) || '#000000';
-        
-        ctx.fillText(
-          text || '',
-          10, // Position right of center
-          fontSize / 2.7 // Center vertically
-        );
-
-      } else {
-        // CASE TEXT ONLY
-        contentRotationAngle += perpendicularText ? Math.PI / 2 : 0;
-        ctx.rotate(contentRotationAngle);
-
-        const text = data[i].option;
-        ctx.font = `${style?.fontStyle || fontStyle} ${
-          style?.fontWeight || fontWeight
-        } ${(style?.fontSize || fontSize) * 2}px ${
-          style?.fontFamily || fontFamily
-        }, Helvetica, Arial`;
-        ctx.fillStyle = (style && style.textColor) as string;
-        ctx.fillText(
-          text || '',
-          -ctx.measureText(text || '').width / 2,
-          fontSize / 2.7
+          -img.width / 2,
+          10, // Di bawah teks
+          img.width,
+          img.height
         );
       }
 

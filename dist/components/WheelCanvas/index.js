@@ -8,11 +8,10 @@ var drawRadialBorder = function (ctx, centerX, centerY, insideRadius, outsideRad
     ctx.closePath();
     ctx.stroke();
 };
-// ... (keep all the imports and interfaces the same)
 var drawWheel = function (canvasRef, data, drawWheelProps) {
-    var _a, _b, _c, _d, _e, _f;
-    /* eslint-disable prefer-const */
-    var outerBorderColor = drawWheelProps.outerBorderColor, outerBorderWidth = drawWheelProps.outerBorderWidth, innerRadius = drawWheelProps.innerRadius, innerBorderColor = drawWheelProps.innerBorderColor, innerBorderWidth = drawWheelProps.innerBorderWidth, radiusLineColor = drawWheelProps.radiusLineColor, radiusLineWidth = drawWheelProps.radiusLineWidth, fontFamily = drawWheelProps.fontFamily, fontWeight = drawWheelProps.fontWeight, fontSize = drawWheelProps.fontSize, fontStyle = drawWheelProps.fontStyle, perpendicularText = drawWheelProps.perpendicularText, prizeMap = drawWheelProps.prizeMap, textDistance = drawWheelProps.textDistance;
+    var _a, _b, _c, _d;
+    var outerBorderWidth = drawWheelProps.outerBorderWidth, radiusLineWidth = drawWheelProps.radiusLineWidth, innerBorderWidth = drawWheelProps.innerBorderWidth;
+    var outerBorderColor = drawWheelProps.outerBorderColor, innerRadius = drawWheelProps.innerRadius, innerBorderColor = drawWheelProps.innerBorderColor, radiusLineColor = drawWheelProps.radiusLineColor, fontFamily = drawWheelProps.fontFamily, fontWeight = drawWheelProps.fontWeight, fontSize = drawWheelProps.fontSize, fontStyle = drawWheelProps.fontStyle, perpendicularText = drawWheelProps.perpendicularText, prizeMap = drawWheelProps.prizeMap, textDistance = drawWheelProps.textDistance;
     var QUANTITY = getQuantity(prizeMap);
     outerBorderWidth *= 2;
     innerBorderWidth *= 2;
@@ -32,25 +31,25 @@ var drawWheel = function (canvasRef, data, drawWheelProps) {
         var centerX = canvas.width / 2;
         var centerY = canvas.height / 2;
         for (var i = 0; i < data.length; i++) {
-            var _g = data[i], optionSize = _g.optionSize, style = _g.style;
+            var _e = data[i], optionSize = _e.optionSize, style = _e.style;
             var arc = (optionSize && (optionSize * (2 * Math.PI)) / QUANTITY) ||
                 (2 * Math.PI) / QUANTITY;
             var endAngle = startAngle + arc;
-            ctx.fillStyle = (style && style.backgroundColor);
+            ctx.fillStyle = (style && style.backgroundColor) || '#ffffff';
             ctx.beginPath();
             ctx.arc(centerX, centerY, outsideRadius, startAngle, endAngle, false);
             ctx.arc(centerX, centerY, insideRadius, endAngle, startAngle, true);
             ctx.stroke();
             ctx.fill();
             ctx.save();
-            // WHEEL RADIUS LINES
+            // Draw radial lines
             ctx.strokeStyle = radiusLineWidth <= 0 ? 'transparent' : radiusLineColor;
             ctx.lineWidth = radiusLineWidth;
             drawRadialBorder(ctx, centerX, centerY, insideRadius, outsideRadius, startAngle);
             if (i === data.length - 1) {
                 drawRadialBorder(ctx, centerX, centerY, insideRadius, outsideRadius, endAngle);
             }
-            // WHEEL OUTER BORDER
+            // Draw outer border
             ctx.strokeStyle =
                 outerBorderWidth <= 0 ? 'transparent' : outerBorderColor;
             ctx.lineWidth = outerBorderWidth;
@@ -58,7 +57,7 @@ var drawWheel = function (canvasRef, data, drawWheelProps) {
             ctx.arc(centerX, centerY, outsideRadius - ctx.lineWidth / 2, 0, 2 * Math.PI);
             ctx.closePath();
             ctx.stroke();
-            // WHEEL INNER BORDER
+            // Draw inner border
             ctx.strokeStyle =
                 innerBorderWidth <= 0 ? 'transparent' : innerBorderColor;
             ctx.lineWidth = innerBorderWidth;
@@ -66,42 +65,25 @@ var drawWheel = function (canvasRef, data, drawWheelProps) {
             ctx.arc(centerX, centerY, insideRadius + ctx.lineWidth / 2 - 1, 0, 2 * Math.PI);
             ctx.closePath();
             ctx.stroke();
-            // CONTENT FILL
+            // Draw text + image content
             ctx.translate(centerX + Math.cos(startAngle + arc / 2) * contentRadius, centerY + Math.sin(startAngle + arc / 2) * contentRadius);
             var contentRotationAngle = startAngle + arc / 2;
-            if (data[i].image) {
-                // CASE: RENDER BOTH IMAGE AND TEXT
-                contentRotationAngle +=
-                    data[i].image && !((_a = data[i].image) === null || _a === void 0 ? void 0 : _a.landscape) ? Math.PI / 2 : 0;
-                ctx.rotate(contentRotationAngle);
-                // 1. Render Image (Left Side)
-                var img = ((_b = data[i].image) === null || _b === void 0 ? void 0 : _b._imageHTML) || new Image();
-                var imgWidth = img.width * (((_c = data[i].image) === null || _c === void 0 ? void 0 : _c.sizeMultiplier) || 0.2);
-                var imgHeight = img.height * (((_d = data[i].image) === null || _d === void 0 ? void 0 : _d.sizeMultiplier) || 0.2);
-                // Load image if not already loaded
-                if (((_e = data[i].image) === null || _e === void 0 ? void 0 : _e.uri) && !img.src) {
-                    img.src = ((_f = data[i].image) === null || _f === void 0 ? void 0 : _f.uri) || '';
-                }
-                // Draw image
-                ctx.drawImage(img, -imgWidth - 10, // Position left of center
-                -imgHeight / 2, // Center vertically
-                imgWidth, imgHeight);
-                // 2. Render Text (Right Side)
-                var text = data[i].option;
-                ctx.font = "".concat((style === null || style === void 0 ? void 0 : style.fontStyle) || fontStyle, " ").concat((style === null || style === void 0 ? void 0 : style.fontWeight) || fontWeight, " ").concat(((style === null || style === void 0 ? void 0 : style.fontSize) || fontSize) * 1.2, "px ").concat((style === null || style === void 0 ? void 0 : style.fontFamily) || fontFamily, ", Helvetica, Arial");
-                ctx.fillStyle = (style && style.textColor) || '#000000';
-                ctx.fillText(text || '', 10, // Position right of center
-                fontSize / 2.7 // Center vertically
-                );
+            if (perpendicularText) {
+                contentRotationAngle += Math.PI / 2;
             }
-            else {
-                // CASE TEXT ONLY
-                contentRotationAngle += perpendicularText ? Math.PI / 2 : 0;
-                ctx.rotate(contentRotationAngle);
-                var text = data[i].option;
-                ctx.font = "".concat((style === null || style === void 0 ? void 0 : style.fontStyle) || fontStyle, " ").concat((style === null || style === void 0 ? void 0 : style.fontWeight) || fontWeight, " ").concat(((style === null || style === void 0 ? void 0 : style.fontSize) || fontSize) * 2, "px ").concat((style === null || style === void 0 ? void 0 : style.fontFamily) || fontFamily, ", Helvetica, Arial");
-                ctx.fillStyle = (style && style.textColor);
-                ctx.fillText(text || '', -ctx.measureText(text || '').width / 2, fontSize / 2.7);
+            ctx.rotate(contentRotationAngle);
+            // Draw text
+            var text = data[i].option;
+            ctx.font = "".concat((style === null || style === void 0 ? void 0 : style.fontStyle) || fontStyle, " ").concat((style === null || style === void 0 ? void 0 : style.fontWeight) || fontWeight, " ").concat(((style === null || style === void 0 ? void 0 : style.fontSize) || fontSize) * 2, "px ").concat((style === null || style === void 0 ? void 0 : style.fontFamily) || fontFamily, ", Helvetica, Arial");
+            ctx.fillStyle = (style && style.textColor) || '#000';
+            ctx.textAlign = 'center';
+            ctx.fillText(text || '', 0, -10); // Teks di atas
+            // Draw image (if any)
+            if (data[i].image &&
+                ((_b = (_a = data[i]) === null || _a === void 0 ? void 0 : _a.image) === null || _b === void 0 ? void 0 : _b._imageHTML) instanceof HTMLImageElement) {
+                var img = ((_d = (_c = data[i]) === null || _c === void 0 ? void 0 : _c.image) === null || _d === void 0 ? void 0 : _d._imageHTML) || new Image();
+                ctx.drawImage(img, -img.width / 2, 10, // Di bawah teks
+                img.width, img.height);
             }
             ctx.restore();
             startAngle = endAngle;

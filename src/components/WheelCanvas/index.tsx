@@ -53,23 +53,21 @@ const drawWheel = (
   data: WheelData[],
   drawWheelProps: DrawWheelProps
 ) => {
-  let {
-    outerBorderWidth,
-    radiusLineWidth,
-    innerBorderWidth
-  } = drawWheelProps;
+  let { outerBorderWidth, radiusLineWidth, innerBorderWidth } = drawWheelProps;
 
-  const { outerBorderColor, 
-    innerRadius, 
-    innerBorderColor, 
-    radiusLineColor, 
-    fontFamily, 
-    fontWeight, 
-    fontSize, 
-    fontStyle, 
-    perpendicularText, 
-    prizeMap, 
-    textDistance } = drawWheelProps;
+  const {
+    outerBorderColor,
+    innerRadius,
+    innerBorderColor,
+    radiusLineColor,
+    fontFamily,
+    fontWeight,
+    fontSize,
+    fontStyle,
+    perpendicularText,
+    prizeMap,
+    textDistance,
+  } = drawWheelProps;
 
   const QUANTITY = getQuantity(prizeMap);
 
